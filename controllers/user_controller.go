@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/okakafavour/jaromind-backend/models"
+	"github.com/AbaraEmmanuel/jaromind-backend/models"
 
-	// "github.com/okakafavour/jaromind-backend/services"
-	servicesimpl "github.com/okakafavour/jaromind-backend/services_impl"
+	// "github.com/AbaraEmmanuel/jaromind-backend/services"
+	servicesimpl "github.com/AbaraEmmanuel/jaromind-backend/services_impl"
 )
 
 // var userService services.UserService
