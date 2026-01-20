@@ -23,16 +23,28 @@ func RegisterRoutes(router *gin.Engine) {
 	router.POST("/register", controllers.RegisterUser)
 	router.POST("/login", controllers.LoginUser)
 	
-	// NEW: Course routes (public - anyone can view courses)
+	// Public course routes
 	router.GET("/courses", controllers.GetAllCourses)
 	router.GET("/courses/:id", controllers.GetCourseByID)
+	router.GET("/courses/:id/stats", controllers.GetCourseStats)
 
-	// Protected routes
+	// Protected user routes
 	protected := router.Group("/user")
 	protected.Use(middleware.JWTAuthMiddleware())
 	{
 		protected.GET("/profile", controllers.GetProfile)
 		protected.POST("/enroll/:courseId", controllers.EnrollInCourse)
 		protected.GET("/enrollments", controllers.GetUserEnrollments)
+		protected.PUT("/courses/:courseId/progress", controllers.UpdateProgress)
+		protected.POST("/courses/:courseId/review", controllers.AddReview)
+	}
+
+	// Admin routes (add admin middleware later)
+	admin := router.Group("/admin")
+	admin.Use(middleware.JWTAuthMiddleware()) // Add admin check middleware
+	{
+		admin.POST("/courses", controllers.CreateCourse)
+		admin.PUT("/courses/:id", controllers.UpdateCourse)
+		admin.DELETE("/courses/:id", controllers.DeleteCourse)
 	}
 }
