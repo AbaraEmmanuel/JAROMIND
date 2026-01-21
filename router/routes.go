@@ -11,7 +11,7 @@ import (
 func RegisterRoutes(router *gin.Engine) {
 	// CORS configuration
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8000", "http://127.0.0.1:8000"},
+		AllowOrigins:     []string{"http://localhost:8003", "http://127.0.0.1:8000", "https://edu-tech-v1-mu.vercel.app/"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
 		ExposeHeaders:    []string{"Content-Length", "Authorization"},
