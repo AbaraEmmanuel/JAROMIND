@@ -21,6 +21,7 @@ func RegisterRoutes(router *gin.Engine) {
 			"http://localhost:3000",          // React dev
 			"http://localhost:5500",          // VS Code
 			"https://edu-tech-v1-mu.vercel.app", // Live web app
+			"https://course-management-portal.vercel.app",
 			"https://jaromind.com",           // Your domain
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
