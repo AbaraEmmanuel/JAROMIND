@@ -14,6 +14,8 @@ func RegisterRoutes(router *gin.Engine) {
 	// CORS configuration
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
+			"http://localhost:8000",
+			"http://localhost:8001",
 			"http://localhost:8003",          // Admin panel
 			"http://127.0.0.1:8003",          // Admin alternative
 			"http://localhost:3000",          // React dev
