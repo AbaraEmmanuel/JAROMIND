@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/okakafavour/jaromind-backend/config"
-	"github.com/okakafavour/jaromind-backend/models"
-	"github.com/okakafavour/jaromind-backend/services"
-	"github.com/okakafavour/jaromind-backend/utils"
+	"github.com/AbaraEmmanuel/jaromind-backend/database"
+	"github.com/AbaraEmmanuel/jaromind-backend/models"
+	"github.com/AbaraEmmanuel/jaromind-backend/services"
+	"github.com/AbaraEmmanuel/jaromind-backend/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +23,7 @@ type userServiceImpl struct {
 // Constructor
 func NewUserService() services.UserService {
 	return &userServiceImpl{
-		collection: config.GetCollection("students"),
+		collection: database.GetCollection("students"),
 	}
 }
 

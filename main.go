@@ -1,26 +1,27 @@
+﻿// main.go - CLEANED UP VERSION
 package main
 
 import (
-	"os"
-
-	"github.com/gin-gonic/gin"
-	"github.com/okakafavour/jaromind-backend/config"
-	"github.com/okakafavour/jaromind-backend/router"
+    "os"
+    "github.com/gin-gonic/gin"
+    "github.com/AbaraEmmanuel/jaromind-backend/database"
+    "github.com/AbaraEmmanuel/jaromind-backend/router"
 )
 
 func main() {
+    // Initialize MongoDB
+    database.InitDatabase()
 
-	// Initialize MongoDB
-	config.InitDatabase()
+    // Create router
+    r := gin.Default()
 
-	// Create Gin router
-	r := gin.Default()
-	router.RegisterRoutes(r)
+    // Register routes (CORS is already in router.RegisterRoutes)
+    router.RegisterRoutes(r)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
 
-	r.Run("0.0.0.0:" + port)
+    r.Run("0.0.0.0:" + port)
 }
