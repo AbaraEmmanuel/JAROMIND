@@ -63,6 +63,7 @@ func RegisterRoutes(router *gin.Engine) {
 	router.GET("/tutors", controllers.GetAllTutors)
 	router.GET("/tutors/:id", controllers.GetTutorByID)
 	router.GET("/tutors/:id/availability", controllers.GetTutorAvailability)
+	router.POST("/tutors/login", controllers.TutorLogin)
 
 	// Public tutor application (no auth needed to apply)
 	router.POST("/apply/tutor", controllers.SubmitTutorApplication)
@@ -72,9 +73,20 @@ func RegisterRoutes(router *gin.Engine) {
 	// ======================
 	userProtected := router.Group("/")
 	userProtected.Use(middleware.JWTAuthMiddleware())
+
 	{
 		// User profile
 		userProtected.GET("/user/profile", controllers.GetProfile)
+
+		// ── Trial status ──────────────────────────────────────────────
+		// GET  /user/trial-status         → { canBookFree, hasUsedTrial }
+		// POST /user/trial-status/consume → marks trial used (idempotent)
+		userProtected.GET("/user/trial-status", controllers.GetTrialStatus)
+		userProtected.POST("/user/trial-status/consume", controllers.ConsumeTrialStatus)
+
+		// Payments
+		userProtected.POST("/payments/initialize", controllers.InitializePayment)
+		userProtected.GET("/payments/verify/:reference", controllers.VerifyPayment)
 
 		// Enrollment endpoints
 		userProtected.POST("/enrollments", controllers.CreateEnrollment)
@@ -97,6 +109,8 @@ func RegisterRoutes(router *gin.Engine) {
 		userProtected.GET("/bookings", controllers.GetUserBookings)
 		userProtected.GET("/bookings/:id", controllers.GetBookingByID)
 		userProtected.DELETE("/bookings/:id", controllers.CancelBooking)
+
+		userProtected.PATCH("/tutors/:id", controllers.UpdateTutorProfile)
 	}
 
 	// ======================
@@ -136,7 +150,7 @@ func RegisterRoutes(router *gin.Engine) {
 		adminProtected.GET("/bookings", controllers.AdminGetAllBookings)
 		adminProtected.PUT("/bookings/:id/status", controllers.AdminUpdateBookingStatus)
 
-		// Tutor application review  ← fixed: moved inside adminProtected group
+		// Tutor application review
 		adminProtected.GET("/applications", controllers.AdminGetApplications)
 		adminProtected.GET("/applications/stats", controllers.AdminApplicationStats)
 		adminProtected.GET("/applications/:id", controllers.AdminGetApplication)
@@ -148,10 +162,8 @@ func RegisterRoutes(router *gin.Engine) {
 	// ======================
 	webhook := router.Group("/webhook")
 	{
-		webhook.POST("/paystack", func(c *gin.Context) {
-			// TODO: Implement Paystack webhook handler
-			c.JSON(200, gin.H{"status": "received"})
-		})
+		webhook.POST("/paystack", controllers.PaystackWebhook)
+
 		webhook.POST("/flutterwave", func(c *gin.Context) {
 			// TODO: Implement Flutterwave webhook handler
 			c.JSON(200, gin.H{"status": "received"})

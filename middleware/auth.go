@@ -79,10 +79,10 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		var userID interface{}
 		
 		if uid, ok := claims["user_id"]; ok {
-			// New format (admins and new student tokens)
 			userID = uid
 		} else if uid, ok := claims["user_Id"]; ok {
-			// Old format (existing student tokens - backward compatibility)
+			userID = uid
+		} else if uid, ok := claims["tutor_id"]; ok {
 			userID = uid
 		} else {
 			// No user ID found in token

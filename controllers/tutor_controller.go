@@ -16,6 +16,7 @@ import (
 
 	"github.com/AbaraEmmanuel/jaromind-backend/database"
 	"github.com/AbaraEmmanuel/jaromind-backend/models"
+	"github.com/AbaraEmmanuel/jaromind-backend/utils"
 )
 
 // ── Collection helpers ────────────────────────────────────────────────────────
@@ -943,4 +944,164 @@ func updateTutorSessionCount(tutorID string, delta int) {
 		bson.M{"tutorId": tutorID},
 		bson.M{"$inc": bson.M{"sessionCount": delta}},
 	)
+}
+
+// TutorLogin - POST /tutors/login
+func TutorLogin(c *gin.Context) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    var req struct {
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required"`
+    }
+
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "success": false,
+            "error":   "Email and password are required.",
+        })
+        return
+    }
+
+    // Find tutor by email
+    var tutor models.TutorProfile
+    err := getTutorsCollection().FindOne(ctx, bson.M{
+        "email":    req.Email,
+        "isActive": true,
+    }).Decode(&tutor)
+
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{
+            "success": false,
+            "error":   "Invalid email or password.",
+        })
+        return
+    }
+
+    // If no password set yet, use phone as default password
+    storedPassword := tutor.Password
+    if storedPassword == "" {
+        // First login — phone number is the temporary password
+        // Hash it and save it now so future logins use bcrypt
+        if req.Password != tutor.Phone {
+            c.JSON(http.StatusUnauthorized, gin.H{
+                "success": false,
+                "error":   "Invalid email or password.",
+            })
+            return
+        }
+        // Auto-hash and store phone as password on first login
+        hashed, err := utils.HashPassword(req.Password)
+        if err == nil {
+            getTutorsCollection().UpdateOne(
+                ctx,
+                bson.M{"_id": tutor.ID},
+                bson.M{"$set": bson.M{
+                    "password":  hashed,
+                    "updatedAt": time.Now(),
+                }},
+            )
+        }
+    } else {
+        // Normal login — compare bcrypt hash
+        if !utils.CheckPassword(storedPassword, req.Password) {
+            c.JSON(http.StatusUnauthorized, gin.H{
+                "success": false,
+                "error":   "Invalid email or password.",
+            })
+            return
+        }
+    }
+
+    // Generate JWT
+    token, err := utils.GenerateTutorToken(tutor.TutorID, tutor.Email)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "success": false,
+            "error":   "Failed to generate token.",
+        })
+        return
+    }
+
+    // Never return password
+    tutor.Password = ""
+
+    c.JSON(http.StatusOK, gin.H{
+        "success": true,
+        "token":   token,
+        "tutor":   tutor,
+        "mustChangePassword": tutor.Password == "", // hint to frontend
+    })
+}
+
+// UpdateTutorProfile - PATCH /tutors/:id
+// Called by the tutor dashboard Settings modal to save their Calendly URL.
+func UpdateTutorProfile(c *gin.Context) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    tutorID := c.Param("id")
+
+    var req struct {
+        CalendlyUrl string  `json:"calendlyUrl"`
+        Bio         string  `json:"bio"`
+        HourlyRate  float64 `json:"hourlyRate"`
+        IsOnline    *bool   `json:"isOnline"`
+    }
+
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "success": false,
+            "error":   err.Error(),
+        })
+        return
+    }
+
+    setFields := bson.M{"updatedAt": time.Now()}
+
+    if req.CalendlyUrl != "" {
+        setFields["calendlyUrl"] = req.CalendlyUrl
+    }
+    if req.Bio != "" {
+        setFields["bio"] = req.Bio
+    }
+    if req.HourlyRate > 0 {
+        setFields["hourlyRate"] = req.HourlyRate
+    }
+    if req.IsOnline != nil {
+        setFields["isOnline"] = *req.IsOnline
+    }
+
+    result, err := getTutorsCollection().UpdateOne(
+        ctx,
+        bson.M{
+            "$or": []bson.M{
+                {"tutorId": tutorID},
+                {"_id": convertToObjectID(tutorID)},
+            },
+        },
+        bson.M{"$set": setFields},
+    )
+
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "success": false,
+            "error":   "Failed to update tutor profile",
+        })
+        return
+    }
+
+    if result.MatchedCount == 0 {
+        c.JSON(http.StatusNotFound, gin.H{
+            "success": false,
+            "error":   "Tutor not found",
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "success": true,
+        "message": "Profile updated successfully",
+    })
 }
