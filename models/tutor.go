@@ -18,6 +18,7 @@ type TutorProfile struct {
 	Name      string   `json:"name" bson:"name"`
 	Email     string   `json:"email" bson:"email"`
 	Phone     string   `json:"phone,omitempty" bson:"phone,omitempty"`
+	Password  string `json:"password,omitempty" bson:"password,omitempty"`
 	AvatarURL string   `json:"avatarUrl,omitempty" bson:"avatarUrl,omitempty"`
 	Bio       string   `json:"bio,omitempty" bson:"bio,omitempty"`
 	Subjects  []string `json:"subjects" bson:"subjects"`
@@ -27,6 +28,7 @@ type TutorProfile struct {
 	HourlyRate float64 `json:"hourlyRate" bson:"hourlyRate"`
 	IsOnline   bool    `json:"isOnline" bson:"isOnline"`
 	IsActive   bool    `json:"isActive" bson:"isActive"`
+	CalendlyUrl string  `json:"calendlyUrl,omitempty" bson:"calendlyUrl,omitempty"`
 
 	// Stats (updated on booking / review events)
 	Rating       float64 `json:"rating" bson:"rating"`

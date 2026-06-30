@@ -111,3 +111,15 @@ func GetRoleFromToken(tokenString string) (string, error) {
 
 	return "user", nil // Default to "user" if no role
 }
+func GenerateTutorToken(tutorID, email string) (string, error) {
+    claims := jwt.MapClaims{
+        "tutor_id": tutorID,
+        "email":    email,
+        "role":     "tutor",
+        "exp":      time.Now().Add(time.Hour * 168).Unix(), // 7 days
+        "iat":      time.Now().Unix(),
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return token.SignedString(jwtSecret)
+}
