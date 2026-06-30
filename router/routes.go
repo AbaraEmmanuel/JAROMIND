@@ -25,6 +25,7 @@ func RegisterRoutes(router *gin.Engine) {
 			"https://course-management-portal.vercel.app",
 			"https://upload.jaromind.com",
 			"https://jaromind.com",
+			"https://www.jaromind.com"
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"},
